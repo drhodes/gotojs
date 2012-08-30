@@ -12,3 +12,4 @@ function ifsquare(x, y) {
 function main() {
     ifsquare(3, 4);
 }
+main();

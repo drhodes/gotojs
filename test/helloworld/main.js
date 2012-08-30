@@ -7,3 +7,4 @@ function multiply(x, y) {
 function main() {
     multiply(3, 4);
 }
+main();

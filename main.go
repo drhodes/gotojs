@@ -70,7 +70,6 @@ func (self CompositeLit) Show() string {
 		
 	}	
 	return "new " + ShowExpr(self.Type) + "(" + args + ")"
-	
 }
 
 type ArrayType ast.ArrayType
@@ -97,9 +96,6 @@ func ShowExpr(e ast.Expr) string {
 		return CompositeLit(*e.(*ast.CompositeLit)).Show()	
 	case *ast.ArrayType:
 		return ArrayType(*e.(*ast.ArrayType)).Show()
-	case *ast.StructType:
-		return StructType(*e.(*ast.StructType)).Show()
-
 	}	
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
@@ -159,6 +155,8 @@ func (self IfStmt) Show() string {
 	return result
 }
 
+
+
 type ForStmt ast.ForStmt
 func (self ForStmt) Show() string {	
     // initialization statement or nil
@@ -196,6 +194,8 @@ func gensym() string {
 }
 
 func SingleAssign(stmt AssignStmt) string {
+	// TODO: if Rhs is callexpr, if so, is append? if so
+	// lhs is a slice, so instead generate lhs.push(rhs)
 	return ShowExpr(stmt.Lhs[0]) + " = " + ShowExpr(stmt.Rhs[0]) 
 }
 
@@ -334,15 +334,21 @@ func (self StructList) Show() string {
 
 type StructType ast.StructType
 func (self StructType) Show() string {
-	const class = "function %s %s{%s}"
+	const class = "function %s%s{%s}"
 	args := FieldList(*self.Fields).Show()
 	flds := StructList(*self.Fields).Show()
-	return fmt.Sprintf(class, "asdf", args, flds)
+	return fmt.Sprintf(class, "__STRUCT__NAME__", args, flds)
 }
 
 type TypeSpec ast.TypeSpec
 func (self TypeSpec) Show() string {
-	return self.Name.String() + ShowExpr(self.Type)
+	result := ""
+	switch self.Type.(type) {
+	case *ast.StructType:
+		result = StructType(*self.Type.(*ast.StructType)).Show()
+		return strings.Replace(result, "__STRUCT__NAME__", self.Name.String(), -1)
+	}
+	return result
 }
 
 func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
@@ -355,9 +361,6 @@ func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 		case *ast.Package:		
 			pkg := Package(*node.(*ast.Package))
 			pkg.Show()
-		case *ast.StructType:
-			str := StructType(*node.(*ast.StructType))
-			fmt.Println(str.Show())
 		case *ast.TypeSpec:
 			ts := TypeSpec(*node.(*ast.TypeSpec))
 			fmt.Println(ts.Show())
@@ -369,7 +372,13 @@ func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 }
 
 func filter(info os.FileInfo) bool {
-	return strings.HasSuffix(info.Name(), "go") && (!strings.HasPrefix(info.Name(), "."))
+	if strings.Contains(info.Name(), "console.go") {
+		return false
+	}
+	if strings.HasSuffix(info.Name(), "go") && (!strings.HasPrefix(info.Name(), ".")) {
+		return true
+	}
+	return false
 }
 
 func parse(dir string) map[string]*ast.Package {
@@ -387,6 +396,7 @@ func trans(pks map[string]*ast.Package) {
 	for _, pk := range pks {
 		ast.Walk(ts, pk)
 	}	
+	fmt.Println("main();")
 }
 
 func main() {

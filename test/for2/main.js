@@ -6,3 +6,4 @@ function main() {
         log.Println(a + b);
     }
 }
+main();

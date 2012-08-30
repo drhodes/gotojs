@@ -9,3 +9,4 @@ function count(a, b) {
 function main() {
     count(0, 10);
 }
+main();
