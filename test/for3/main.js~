@@ -1,0 +1,9 @@
+// package main
+
+function main() {
+    temp = [1, 2, 3, 4];
+    for (a in temp) {
+        var b = temp[a];
+        log.Println(a + b);
+    }
+}
