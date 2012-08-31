@@ -1,7 +1,5 @@
 package main
 
-import "log"
-
 func main() {	
 	temp := 0
 	for {		

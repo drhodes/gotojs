@@ -7,6 +7,6 @@ function Point(x, y) {
 
 function main() {
     var p = new Point(1, 2);
-    log.Println(p);
+    console.log(p);
 }
 main();

@@ -1,10 +1,79 @@
 -*- longlines -*-
 
-What about go routines?
+------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------   
+What about goroutines? They look possible, at least in a single thread which is good enough for now.  
+
+Thanks John Tantalo!
+http://www.johntantalo.com/blog/go-flavored-javascript/
+
+setTimeOut looks like the best bet.  He's also got good ideas on
+channels and blocking.
+
 Web Workers?
-how about NaCl?
+NaCl?
+continuations? brain violence.
+
+
+----------------------------------------------------------------------
 pointers?
 
+May not be possible without destructors or finalizers.
+
+Why? Because either are needed to decrement a reference count.
+Also. Including a custom garbage collector written in javascript 
+would be insane.
+ 
+Implementing with reference counting.
+
+string_pointer = { addr:123, val:hello }
+string_pointer.set_finalizer(){
+   if memory_map[123]-- == 0:
+   	  set pointer to null?!?! 
+	  FSM please have mercy.
+   }
+}
+	
+this requires finalizers or destructors.
+
+
+
+Are they needed?
+Con:
+- they may require a global memory map.
+
+
+
+Pro:
+- remain consistant with go
+- possible with refere
+
+
+reading list:
+
+
+using closures
+http://hpyblg.wordpress.com/2010/05/30/simulating-pointers-in-javascript/
+
+
+Pointers may require the exp/type module.  The problem is that code that doesn't syntactically make evident the pointer nature of an expression will require type analysis.
+
+
+temp := new(int)  // this is easy, new means: Pointer!
+
+
+
+temp := NewInt()  // such that NewInt returns an *int
+temp2 := *temp    // whaaa.
+
+
+
+
+
+------------------------------------------------------------------
 struct?
 No types.
 Objects

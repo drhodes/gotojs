@@ -1,11 +1,13 @@
 package main
 
-func count(a, b int) {
+func count(a, b int) int {
 	for i:=a; i<b; i++ {
 		a = i
 	}
+	return a
 }
 
 func main() {	
-	count(0,10)
+	t := count(0,10)
+	console.log(t)
 }

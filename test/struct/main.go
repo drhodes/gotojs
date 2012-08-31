@@ -7,5 +7,5 @@ type Point struct {
 
 func main() {	
 	p := Point{1, 2}
-	log.Println(p)
+	console.log(p)
 }

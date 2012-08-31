@@ -4,9 +4,11 @@ function count(a, b) {
     for (var i = a; i < b; i++) {
         var a = i;
     }
+    return a;
 }
 
 function main() {
-    count(0, 10);
+    var t = count(0, 10);
+    console.log(t);
 }
 main();

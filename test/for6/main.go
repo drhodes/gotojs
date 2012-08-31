@@ -1,8 +1,5 @@
 package main
 
-import "log"
-
-
 type Address struct {
 	Number int
 	Street string
@@ -14,6 +11,8 @@ func main() {
 	adds := []Address{}
 
 	for i:=0; i<10; i++ {
-		adds = append(adds, Address {21, "Jump st", "John Doe", 10001})
+		temp := Address {21, "Jump st", "John Doe", 10001}
+		adds = append(adds, temp)
+		console.log(adds)
 	}
 }

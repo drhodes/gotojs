@@ -10,7 +10,9 @@ function Address(Number, Street, Name, ZipCode) {
 function main() {
     var adds = [];
     for (var i = 0; i < 10; i++) {
-        var adds = append(adds, new Address(21, "Jump st", "John Doe", 10001));
+        var temp = new Address(21, "Jump st", "John Doe", 10001);
+        var adds = append(adds, temp);
+        console.log(adds);
     }
 }
 main();
