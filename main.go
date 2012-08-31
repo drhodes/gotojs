@@ -25,6 +25,10 @@ func (self StateMap) enter(id string) {
 	self[id] = true
 }
 func (self StateMap) exit(id string) {
+	if !self[id] {
+		msg := "Trying to StateMap.exit() from %s, but %s not in StateMap"
+		log.Panic(fmt.Sprintf(msg, id, id))
+	}
 	delete(self, id)
 }
 func (self StateMap) isin(id string) bool {
@@ -288,6 +292,30 @@ func (self BranchStmt) Show() string {
 	return self.Tok.String() +";"
 }
 
+type SwitchStmt ast.SwitchStmt
+func (self SwitchStmt) Show() string {
+	cond := ""
+	if self.Tag != nil {
+		cond = ShowExpr(self.Tag)
+	}
+	temp := `switch (%s) %s`
+
+	body := ShowStmt(self.Body)
+	if self.Tag == nil {
+		return fmt.Sprintf(temp, "true", body)
+	}
+	return fmt.Sprintf(temp, cond, body)
+}
+
+type CaseClause ast.CaseClause
+func (self CaseClause) Show() string {
+	
+	temp := "case %s: %s"
+	list := ExprList(self.List).Show()
+	body := StmtList(self.Body).Show()
+	return fmt.Sprintf(temp, list, body) + "break;"
+}
+
 func ShowStmt(s ast.Stmt) string {
 	switch (s).(type) {
 	case *ast.ReturnStmt: 			
@@ -308,6 +336,11 @@ func ShowStmt(s ast.Stmt) string {
 		return RangeStmt(*s.(*ast.RangeStmt)).Show()
 	case *ast.BranchStmt:
 		return BranchStmt(*s.(*ast.BranchStmt)).Show()
+	case *ast.SwitchStmt:
+		return SwitchStmt(*s.(*ast.SwitchStmt)).Show()
+	case *ast.CaseClause:
+		return CaseClause(*s.(*ast.CaseClause)).Show()
+
 	}
 	return "unhandled Stmt in func ShowStmt: " + fmt.Sprintf("%T", s)
 }

@@ -1,11 +1,18 @@
 -*- longlines -*-
 
-----------------------------------------------------------------------
+
+
+======================================================================
+Switch Statements.
+
+Same behavior as go, break statments are generated.
+
+======================================================================
 Scoping.
 
 
 Javascript has static scoping
-Go uses dyn uses
+Go uses dyn 
 
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  
