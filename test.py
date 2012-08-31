@@ -2,7 +2,7 @@
 
 import os, sys
 
-TESTDIR = "./test"
+TESTDIR = "./test/pass"
     
 def testpath(path):
     # get the gojs compiler output

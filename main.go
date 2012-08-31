@@ -18,6 +18,24 @@ var (
 type Trans struct {
 }
 
+// GLOBAL STATE -------------------------------------------------------
+type StateMap map[string]bool
+var sm = make(StateMap)
+func (self StateMap) enter(id string) {
+	self[id] = true
+}
+func (self StateMap) exit(id string) {
+	delete(self, id)
+}
+func (self StateMap) isin(id string) bool {
+	return self[id]
+}
+
+
+
+// --------------------------------------------------------------------
+
+
 type Package ast.Package
 func (self Package) Show() {
 	f := "// package %s\n"
@@ -32,10 +50,13 @@ func (self ReturnStmt) Show() string {
 	for _, xp := range self.Results {
 		exps = append(exps, ShowExpr(xp))
 	}
+	if len(exps) == 1 {
+		return s + exps[0]
+	}
 	if len(exps) > 1 {
 		return s + "[" + strings.Join(exps, ",") + "]"
 	}
-	return s + exps[0]
+	return s
 }
 
 type BasicLit ast.BasicLit
@@ -76,10 +97,15 @@ type ArrayType ast.ArrayType
 func (self ArrayType) Show() string {
 	log.Println(ShowExpr(self.Elt))
 	log.Println(ShowExpr(self.Len))
-	return "asdf"
+	return "array-type-show"
 }
 
-// -----------------------------------------------------------------------------
+type StarExpr ast.StarExpr
+func (self StarExpr) Show() string {
+	// FULLSTOP UNTIL exp/types is done.
+	return ShowExpr(self.X) 
+}
+
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
 	case *ast.CallExpr:
@@ -96,6 +122,8 @@ func ShowExpr(e ast.Expr) string {
 		return CompositeLit(*e.(*ast.CompositeLit)).Show()	
 	case *ast.ArrayType:
 		return ArrayType(*e.(*ast.ArrayType)).Show()
+	case *ast.StarExpr:
+		return StarExpr(*e.(*ast.StarExpr)).Show()
 	}	
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
@@ -155,8 +183,6 @@ func (self IfStmt) Show() string {
 	return result
 }
 
-
-
 type ForStmt ast.ForStmt
 func (self ForStmt) Show() string {	
     // initialization statement or nil
@@ -193,7 +219,14 @@ func gensym() string {
 	return fmt.Sprintf("__symb__%d", __cur_symb)
 }
 
-func SingleAssign(stmt AssignStmt) string {
+func SingleAssign(stmt AssignStmt) string {	
+	// safe assumption: len(self.lhs) == len(self.rhs) == 1
+	e := stmt.Lhs[0]
+	switch e.(type) {
+	case *ast.StarExpr:		
+		return StarExpr(*e.(*ast.StarExpr)).Show()
+	}
+
 	// TODO: if Rhs is callexpr, if so, is append? if so
 	// lhs is a slice, so instead generate lhs.push(rhs)
 	return ShowExpr(stmt.Lhs[0]) + " = " + ShowExpr(stmt.Rhs[0]) 
@@ -285,12 +318,13 @@ func (self FuncType) Show() string {
 type FuncDecl ast.FuncDecl
 func (self FuncDecl) Show() string {
 	f := "function %s %s %s"		
-	return fmt.Sprintf(f, 
-		Ident(*self.Name).Show(), 
-		FuncType(*self.Type).Show(),
-		BlockStmt(*self.Body).Show(),
-		//Recv(self.Recv).Show(),
-		) 
+	ident := Ident(*self.Name).Show()
+	sm.enter("FuncType")
+	ftype := FuncType(*self.Type).Show()
+	sm.exit("FuncType")
+	bstmt := BlockStmt(*self.Body).Show()
+
+	return fmt.Sprintf(f, ident, ftype, bstmt)
 } 
 
 type Field ast.Field

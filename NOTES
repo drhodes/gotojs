@@ -1,8 +1,5 @@
 -*- longlines -*-
 
-------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  
@@ -17,9 +14,34 @@ Web Workers?
 NaCl?
 continuations? brain violence.
 
-
-----------------------------------------------------------------------
+======================================================================
 pointers?
+
+
+Until exp/types is done, there's no way to determine if an expression evalutates to a pointer, therefore the compiler can't translate StarExpr's correctly.  Yay, once exp/types is done then move ast.Walk to exp/types.Walk and the nodes should have a type field immediately available.  
+
+
+
+
+using closures
+http://hpyblg.wordpress.com/2010/05/30/simulating-pointers-in-javascript/
+
+Why is this better than 
+
+a = {val:1}
+b = {val:2}
+
+function swap(a, b) {
+		 temp = a.val
+		 a.val = b.val
+		 b.val = temp
+}
+
+
+Old pointer thoughts.
+------------------------------------------------------------------
+
+OTHERWISE.
 
 May not be possible without destructors or finalizers.
 
@@ -55,16 +77,12 @@ Pro:
 reading list:
 
 
-using closures
-http://hpyblg.wordpress.com/2010/05/30/simulating-pointers-in-javascript/
 
 
 Pointers may require the exp/type module.  The problem is that code that doesn't syntactically make evident the pointer nature of an expression will require type analysis.
 
 
 temp := new(int)  // this is easy, new means: Pointer!
-
-
 
 temp := NewInt()  // such that NewInt returns an *int
 temp2 := *temp    // whaaa.

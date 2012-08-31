@@ -1,0 +1,17 @@
+// package main
+
+function ptr_square(n_ptr) {
+    if (n_ptr == nil) {
+        return;
+    }
+    var val = n_ptr;
+    var n_ptr;
+}
+
+function main() {
+    var n = new(int);
+    var n;
+    ptr_square(n);
+    console.log(n);
+}
+main();
