@@ -1,5 +1,11 @@
 -*- longlines -*-
 
+----------------------------------------------------------------------
+Scoping.
+
+
+Javascript has static scoping
+Go uses dyn uses
 
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  

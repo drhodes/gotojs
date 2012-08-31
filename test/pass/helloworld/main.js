@@ -1,10 +1,8 @@
 // package main
-
-function multiply(x, y) {
+var multiply = function(x, y) {
     return x * y;
 }
-
-function main() {
+var main = function() {
     multiply(3, 4);
 }
 main();

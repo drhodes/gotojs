@@ -219,17 +219,27 @@ func gensym() string {
 	return fmt.Sprintf("__symb__%d", __cur_symb)
 }
 
-func SingleAssign(stmt AssignStmt) string {	
+func SingleAssign(stmt AssignStmt) (bool, string) {	
 	// safe assumption: len(self.lhs) == len(self.rhs) == 1
 	e := stmt.Lhs[0]
 	switch e.(type) {
 	case *ast.StarExpr:		
-		return StarExpr(*e.(*ast.StarExpr)).Show()
+		log.Panic("Pointers aren't ready yet, can't use em. Sorry.")
 	}
 
-	// TODO: if Rhs is callexpr, if so, is append? if so
-	// lhs is a slice, so instead generate lhs.push(rhs)
-	return ShowExpr(stmt.Lhs[0]) + " = " + ShowExpr(stmt.Rhs[0]) 
+	// TODO: if Rhs is callexpr, if so, is append? ok
+	// so need to find a way to include js src.
+	tok := stmt.Tok.String()
+	if tok == ":=" {
+		tok = "="
+	}
+	
+	left := ShowExpr(stmt.Lhs[0])
+	hasdot := strings.Contains(left, ".") 
+
+	right := ShowExpr(stmt.Rhs[0])
+	tok = " " + tok + " "
+	return hasdot, fmt.Sprintf("%s %s %s", left, tok, right)	
 }
 
 type AssignStmt ast.AssignStmt
@@ -239,11 +249,17 @@ func (self AssignStmt) Show() string {
 	// goes to 
 	// gensym = expr()
 	// val = gensym[0]
-	// err = gensym[1]
-	
+	// err = gensym[1]	
+	// if left hand side is . identifier
+
 	switch {
 	case len(self.Lhs) == 1 && len(self.Rhs) == 1:		
-		return "var " + SingleAssign(self)		
+		hasdot, result := SingleAssign(self)		
+		if hasdot {
+			return result
+		} else { 
+			return "var " + result
+		}
 	case len(self.Rhs) != 1:
 		// return MultiAssign(self)
 		return "MultiAssign not implemented yet"
@@ -317,14 +333,23 @@ func (self FuncType) Show() string {
 
 type FuncDecl ast.FuncDecl
 func (self FuncDecl) Show() string {
-	f := "function %s %s %s"		
 	ident := Ident(*self.Name).Show()
 	sm.enter("FuncType")
 	ftype := FuncType(*self.Type).Show()
 	sm.exit("FuncType")
 	bstmt := BlockStmt(*self.Body).Show()
-
-	return fmt.Sprintf(f, ident, ftype, bstmt)
+	recv := ""
+	if self.Recv != nil {
+		if len(self.Recv.List) != 0 {
+			// Point.prototype.Add = function
+			f := "%s.%s = function %s %s" 
+			typ := self.Recv.List[0]
+			recv = ShowExpr(typ.Type) + ".prototype"
+			return fmt.Sprintf(f, recv, ident, ftype, bstmt)
+		}
+	}
+	f := "var %s = function %s %s %s"		
+	return fmt.Sprintf(f, ident, recv, ftype, bstmt)
 } 
 
 type Field ast.Field

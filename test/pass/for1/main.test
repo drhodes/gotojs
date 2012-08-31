@@ -1,13 +1,11 @@
 // package main
-
-function count(a, b) {
+var count = function(a, b) {
     for (var i = a; i < b; i++) {
         var a = i;
     }
     return a;
 }
-
-function main() {
+var main = function() {
     var t = count(0, 10);
     console.log(t);
 }

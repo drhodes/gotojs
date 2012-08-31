@@ -4,8 +4,7 @@ function Point(x, y) {
     this.x = x;
     this.y = y;
 }
-
-function main() {
+var main = function() {
     var p = new Point(1, 2);
     console.log(p);
 }
