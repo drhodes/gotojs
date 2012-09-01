@@ -31,7 +31,27 @@ continuations? brain violence.
 pointers?
 
 
-Until exp/types is done, there's no way to determine if an expression evalutates to a pointer, therefore the compiler can't translate StarExpr's correctly.  Yay, once exp/types is done then move ast.Walk to exp/types.Walk and the nodes should have a type field immediately available.  
+Until exp/types is done, there's no way to determine if an expression evalutates to a pointer, therefore the compiler can't translate StarExpr's correctly.  once exp/types is done then move ast.Walk to exp/types.Walk and the nodes should have a type field immediately available.  
+
+UNLESS!
+
+Values are marked as pointers!
+
+function newptr(){
+    var inner = function() {
+        var val = null;
+        var f = function(v) {
+            if (arguments.length > 0) {
+                val = v;
+            }
+            return val;
+        };
+        f.prototype.ptr = true;
+        return f;
+    };
+    return inner();
+}
+
 
 
 

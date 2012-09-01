@@ -4,7 +4,7 @@ import (
 	"flag"
 	"go/ast"
 	"go/parser"
-	"go/token"
+	"go/token"	
 	"log"
 	"os"
 	"strings"
@@ -38,7 +38,6 @@ func (self StateMap) isin(id string) bool {
 
 
 // --------------------------------------------------------------------
-
 
 type Package ast.Package
 func (self Package) Show() {
@@ -340,7 +339,6 @@ func ShowStmt(s ast.Stmt) string {
 		return SwitchStmt(*s.(*ast.SwitchStmt)).Show()
 	case *ast.CaseClause:
 		return CaseClause(*s.(*ast.CaseClause)).Show()
-
 	}
 	return "unhandled Stmt in func ShowStmt: " + fmt.Sprintf("%T", s)
 }
@@ -443,19 +441,62 @@ func (self TypeSpec) Show() string {
 	return result
 }
 
+type ValueSpec ast.ValueSpec
+func (self ValueSpec) Show(dec string) string {
+	const temp = "%s %s %s = %s"
+	result := []string{}
+	
+	for i := range self.Names {
+		t := ""
+		if self.Type != nil {
+			t = ShowExpr(self.Type)
+		}
+		name := self.Names[i].String()
+		val := ShowExpr(self.Values[i])
+		r := fmt.Sprintf(temp, dec, t, name, val) + ";"
+		result = append(result, r)
+	}
+	return strings.Join(result, "\n")
+}
+
+type GenDecl ast.GenDecl
+func (self GenDecl) Show() string {
+	result := []string{}
+	for _, spec := range self.Specs {
+		switch spec.(type) {
+		case *ast.ValueSpec: 			
+			vs := ValueSpec(*spec.(*ast.ValueSpec))
+			result = append(result, vs.Show(self.Tok.String()))
+		case *ast.ImportSpec:
+			continue; //result = append(Result, "")
+		case *ast.TypeSpec:
+			ts := TypeSpec(*spec.(*ast.TypeSpec))
+			result = append(result, ts.Show())
+		default:
+			return "unhandled GenDecl in func GenDecl.Show: " + fmt.Sprintf("%T", spec)			
+		}
+	}
+	return strings.Join(result, "\n")
+}
+
 func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 	if node != nil {
-		//log.Printf("%T", node)
+		//log.Printf("%T", node)			
+
 		switch node.(type) {
 		case *ast.FuncDecl:		
 			f := FuncDecl(*node.(*ast.FuncDecl))
-			fmt.Println(f.Show())
+			fmt.Println(f.Show())			
 		case *ast.Package:		
 			pkg := Package(*node.(*ast.Package))
 			pkg.Show()
-		case *ast.TypeSpec:
-			ts := TypeSpec(*node.(*ast.TypeSpec))
-			fmt.Println(ts.Show())
+		// case *ast.TypeSpec:
+		// 	ts := TypeSpec(*node.(*ast.TypeSpec))
+		// 	fmt.Println(ts.Show())
+		case *ast.GenDecl:
+			fmt.Println(GenDecl(*node.(*ast.GenDecl)).Show())
+			
+
 		default: 
 			//log.Println("Not handled")
 		}
