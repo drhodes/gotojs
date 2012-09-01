@@ -37,7 +37,7 @@ func init() {
 // It prints into a buffer that must be set up separately.
 type fmt struct {
 	intbuf [nByte]byte
-	buf    *buffer
+	buf    buffer
 	// width, precision
 	wid  int
 	prec int
@@ -53,7 +53,7 @@ type fmt struct {
 	zero        bool
 }
 
-func (f *fmt) clearflags() {
+func (f fmt) clearflags() {
 	f.wid = 0
 	f.widPresent = false
 	f.prec = 0
@@ -67,13 +67,13 @@ func (f *fmt) clearflags() {
 	f.zero = false
 }
 
-func (f *fmt) init(buf *buffer) {
+func (f fmt) init(buf buffer) {
 	f.buf = buf
 	f.clearflags()
 }
 
 // Compute left and right padding widths (only one will be non-zero).
-func (f *fmt) computePadding(width int) (padding []byte, leftWidth, rightWidth int) {
+func (f fmt) computePadding(width int) (padding []byte, leftWidth, rightWidth int) {
 	left := !f.minus
 	w := f.wid
 	if w < 0 {
@@ -96,7 +96,7 @@ func (f *fmt) computePadding(width int) (padding []byte, leftWidth, rightWidth i
 }
 
 // Generate n bytes of padding.
-func (f *fmt) writePadding(n int, padding []byte) {
+func (f fmt) writePadding(n int, padding []byte) {
 	for n > 0 {
 		m := n
 		if m > nByte {
@@ -109,7 +109,7 @@ func (f *fmt) writePadding(n int, padding []byte) {
 
 // Append b to f.buf, padded on left (w > 0) or right (w < 0 or f.minus)
 // clear flags afterwards.
-func (f *fmt) pad(b []byte) {
+func (f fmt) pad(b []byte) {
 	if !f.widPresent || f.wid == 0 {
 		f.buf.Write(b)
 		return
@@ -126,7 +126,7 @@ func (f *fmt) pad(b []byte) {
 
 // append s to buf, padded on left (w > 0) or right (w < 0 or f.minus).
 // clear flags afterwards.
-func (f *fmt) padString(s string) {
+func (f fmt) padString(s string) {
 	if !f.widPresent || f.wid == 0 {
 		f.buf.WriteString(s)
 		return
@@ -158,7 +158,7 @@ var (
 )
 
 // fmt_boolean formats a boolean.
-func (f *fmt) fmt_boolean(v bool) {
+func (f fmt) fmt_boolean(v bool) {
 	if v {
 		f.pad(trueBytes)
 	} else {
@@ -168,7 +168,7 @@ func (f *fmt) fmt_boolean(v bool) {
 
 // integer; interprets prec but not wid.  Once formatted, result is sent to pad()
 // and then flags are cleared.
-func (f *fmt) integer(a int64, base uint64, signedness bool, digits string) {
+func (f fmt) integer(a int64, base uint64, signedness bool, digits string) {
 	// precision of 0 and value of 0 means "print nothing"
 	if f.precPresent && f.prec == 0 && a == 0 {
 		return
@@ -265,7 +265,7 @@ func (f *fmt) integer(a int64, base uint64, signedness bool, digits string) {
 }
 
 // truncate truncates the string to the specified precision, if present.
-func (f *fmt) truncate(s string) string {
+func (f fmt) truncate(s string) string {
 	if f.precPresent && f.prec < utf8.RuneCountInString(s) {
 		n := f.prec
 		for i := range s {
@@ -280,13 +280,13 @@ func (f *fmt) truncate(s string) string {
 }
 
 // fmt_s formats a string.
-func (f *fmt) fmt_s(s string) {
+func (f fmt) fmt_s(s string) {
 	s = f.truncate(s)
 	f.padString(s)
 }
 
 // fmt_sx formats a string as a hexadecimal encoding of its bytes.
-func (f *fmt) fmt_sx(s, digits string) {
+func (f fmt) fmt_sx(s, digits string) {
 	// TODO: Avoid buffer by pre-padding.
 	var b []byte
 	for i := 0; i < len(s); i++ {
@@ -300,7 +300,7 @@ func (f *fmt) fmt_sx(s, digits string) {
 }
 
 // fmt_q formats a string as a double-quoted, escaped Go string constant.
-func (f *fmt) fmt_q(s string) {
+func (f fmt) fmt_q(s string) {
 	s = f.truncate(s)
 	var quoted string
 	if f.sharp && strconv.CanBackquote(s) {
@@ -317,7 +317,7 @@ func (f *fmt) fmt_q(s string) {
 
 // fmt_qc formats the integer as a single-quoted, escaped Go character constant.
 // If the character is not valid Unicode, it will print '\ufffd'.
-func (f *fmt) fmt_qc(c int64) {
+func (f fmt) fmt_qc(c int64) {
 	var quoted []byte
 	if f.plus {
 		quoted = strconv.AppendQuoteRuneToASCII(f.intbuf[0:0], rune(c))
@@ -329,7 +329,7 @@ func (f *fmt) fmt_qc(c int64) {
 
 // floating-point
 
-func doPrec(f *fmt, def int) int {
+func doPrec(f fmt, def int) int {
 	if f.precPresent {
 		return f.prec
 	}
@@ -337,7 +337,7 @@ func doPrec(f *fmt, def int) int {
 }
 
 // formatFloat formats a float64; it is an efficient equivalent to  f.pad(strconv.FormatFloat()...).
-func (f *fmt) formatFloat(v float64, verb byte, prec, n int) {
+func (f fmt) formatFloat(v float64, verb byte, prec, n int) {
 	// We leave one byte at the beginning of f.intbuf for a sign if needed,
 	// and make it a space, which we might be able to use.
 	f.intbuf[0] = ' '
@@ -362,47 +362,47 @@ func (f *fmt) formatFloat(v float64, verb byte, prec, n int) {
 }
 
 // fmt_e64 formats a float64 in the form -1.23e+12.
-func (f *fmt) fmt_e64(v float64) { f.formatFloat(v, 'e', doPrec(f, 6), 64) }
+func (f fmt) fmt_e64(v float64) { f.formatFloat(v, 'e', doPrec(f, 6), 64) }
 
 // fmt_E64 formats a float64 in the form -1.23E+12.
-func (f *fmt) fmt_E64(v float64) { f.formatFloat(v, 'E', doPrec(f, 6), 64) }
+func (f fmt) fmt_E64(v float64) { f.formatFloat(v, 'E', doPrec(f, 6), 64) }
 
 // fmt_f64 formats a float64 in the form -1.23.
-func (f *fmt) fmt_f64(v float64) { f.formatFloat(v, 'f', doPrec(f, 6), 64) }
+func (f fmt) fmt_f64(v float64) { f.formatFloat(v, 'f', doPrec(f, 6), 64) }
 
 // fmt_g64 formats a float64 in the 'f' or 'e' form according to size.
-func (f *fmt) fmt_g64(v float64) { f.formatFloat(v, 'g', doPrec(f, -1), 64) }
+func (f fmt) fmt_g64(v float64) { f.formatFloat(v, 'g', doPrec(f, -1), 64) }
 
 // fmt_g64 formats a float64 in the 'f' or 'E' form according to size.
-func (f *fmt) fmt_G64(v float64) { f.formatFloat(v, 'G', doPrec(f, -1), 64) }
+func (f fmt) fmt_G64(v float64) { f.formatFloat(v, 'G', doPrec(f, -1), 64) }
 
 // fmt_fb64 formats a float64 in the form -123p3 (exponent is power of 2).
-func (f *fmt) fmt_fb64(v float64) { f.formatFloat(v, 'b', 0, 64) }
+func (f fmt) fmt_fb64(v float64) { f.formatFloat(v, 'b', 0, 64) }
 
 // float32
 // cannot defer to float64 versions
 // because it will get rounding wrong in corner cases.
 
 // fmt_e32 formats a float32 in the form -1.23e+12.
-func (f *fmt) fmt_e32(v float32) { f.formatFloat(float64(v), 'e', doPrec(f, 6), 32) }
+func (f fmt) fmt_e32(v float32) { f.formatFloat(float64(v), 'e', doPrec(f, 6), 32) }
 
 // fmt_E32 formats a float32 in the form -1.23E+12.
-func (f *fmt) fmt_E32(v float32) { f.formatFloat(float64(v), 'E', doPrec(f, 6), 32) }
+func (f fmt) fmt_E32(v float32) { f.formatFloat(float64(v), 'E', doPrec(f, 6), 32) }
 
 // fmt_f32 formats a float32 in the form -1.23.
-func (f *fmt) fmt_f32(v float32) { f.formatFloat(float64(v), 'f', doPrec(f, 6), 32) }
+func (f fmt) fmt_f32(v float32) { f.formatFloat(float64(v), 'f', doPrec(f, 6), 32) }
 
 // fmt_g32 formats a float32 in the 'f' or 'e' form according to size.
-func (f *fmt) fmt_g32(v float32) { f.formatFloat(float64(v), 'g', doPrec(f, -1), 32) }
+func (f fmt) fmt_g32(v float32) { f.formatFloat(float64(v), 'g', doPrec(f, -1), 32) }
 
 // fmt_G32 formats a float32 in the 'f' or 'E' form according to size.
-func (f *fmt) fmt_G32(v float32) { f.formatFloat(float64(v), 'G', doPrec(f, -1), 32) }
+func (f fmt) fmt_G32(v float32) { f.formatFloat(float64(v), 'G', doPrec(f, -1), 32) }
 
 // fmt_fb32 formats a float32 in the form -123p3 (exponent is power of 2).
-func (f *fmt) fmt_fb32(v float32) { f.formatFloat(float64(v), 'b', 0, 32) }
+func (f fmt) fmt_fb32(v float32) { f.formatFloat(float64(v), 'b', 0, 32) }
 
 // fmt_c64 formats a complex64 according to the verb.
-func (f *fmt) fmt_c64(v complex64, verb rune) {
+func (f fmt) fmt_c64(v complex64, verb rune) {
 	f.buf.WriteByte('(')
 	r := real(v)
 	for i := 0; ; i++ {
@@ -428,7 +428,7 @@ func (f *fmt) fmt_c64(v complex64, verb rune) {
 }
 
 // fmt_c128 formats a complex128 according to the verb.
-func (f *fmt) fmt_c128(v complex128, verb rune) {
+func (f fmt) fmt_c128(v complex128, verb rune) {
 	f.buf.WriteByte('(')
 	r := real(v)
 	for i := 0; ; i++ {
