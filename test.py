@@ -38,7 +38,15 @@ def testpath(path):
         # else pass happy.
         # print "pass: " + path
 
+def check_gotojs():
+    if os.path.isfile("./gotojs"):
+        return    
+    print " gotojs not found, it's probably not built"
+    print
+    print " $ go build"
+    sys.exit(1)
+    
 if __name__ == "__main__":
+    check_gotojs()
     for d in os.listdir(TESTDIR):
         testpath(d)
-        

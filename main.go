@@ -34,9 +34,6 @@ func (self StateMap) exit(id string) {
 func (self StateMap) isin(id string) bool {
 	return self[id]
 }
-
-
-
 // --------------------------------------------------------------------
 
 type Package ast.Package
@@ -90,8 +87,7 @@ func (self CompositeLit) Show() string {
 		switch self.Type.(type) {
 		case *ast.ArrayType:
 			return result + "["+args+"]"
-		}
-		
+		}	
 	}	
 	return "new " + ShowExpr(self.Type) + "(" + args + ")"
 }
@@ -115,6 +111,21 @@ func (self IndexExpr) Show() string {
 	return ShowExpr(self.X) + "[" + idx + "]"
 }
 
+type SliceExpr ast.SliceExpr
+func (self SliceExpr) Show() string {
+	const temp = "%s.slice(%s,%s)"
+	x := ShowExpr(self.X)
+	low := "0"
+	if self.Low != nil {
+		low = ShowExpr(self.Low)
+	}
+	high := fmt.Sprintf("%s.length", x)
+	if self.High != nil {
+		high = ShowExpr(self.High)
+	}
+	return fmt.Sprintf(temp, x, low, high)
+}
+
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
 	case *ast.CallExpr:
@@ -135,7 +146,8 @@ func ShowExpr(e ast.Expr) string {
 		return StarExpr(*e.(*ast.StarExpr)).Show()
 	case *ast.IndexExpr:
 		return IndexExpr(*e.(*ast.IndexExpr)).Show()
-
+	case *ast.SliceExpr:
+		return SliceExpr(*e.(*ast.SliceExpr)).Show()
 	}	
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
@@ -225,7 +237,6 @@ func (self ForStmt) Show() string {
 	}
 
 	body := ShowStmt(self.Body)
-	
 	return fmt.Sprintf(temp, init, cond, post) + body
 }
 
@@ -311,7 +322,6 @@ func (self SwitchStmt) Show() string {
 		cond = ShowExpr(self.Tag)
 	}
 	temp := `switch (%s) %s`
-
 	body := ShowStmt(self.Body)
 	if self.Tag == nil {
 		return fmt.Sprintf(temp, "true", body)
@@ -321,7 +331,6 @@ func (self SwitchStmt) Show() string {
 
 type CaseClause ast.CaseClause
 func (self CaseClause) Show() string {
-	
 	temp := "case %s: %s"
 	list := ExprList(self.List).Show()
 	body := StmtList(self.Body).Show()
@@ -500,16 +509,17 @@ func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 		case *ast.FuncDecl:		
 			f := FuncDecl(*node.(*ast.FuncDecl))
 			fmt.Println(f.Show())			
+
 		case *ast.Package:		
 			pkg := Package(*node.(*ast.Package))
 			pkg.Show()
+
 		// case *ast.TypeSpec:
 		// 	ts := TypeSpec(*node.(*ast.TypeSpec))
 		// 	fmt.Println(ts.Show())
+
 		case *ast.GenDecl:
 			fmt.Println(GenDecl(*node.(*ast.GenDecl)).Show())
-			
-
 		default: 
 			//log.Println("Not handled")
 		}
