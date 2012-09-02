@@ -126,6 +126,14 @@ func (self SliceExpr) Show() string {
 	return fmt.Sprintf(temp, x, low, high)
 }
 
+type FuncLit ast.FuncLit
+func (self FuncLit) Show() string {
+	const temp = "function%s%s"
+	t := FuncType(*self.Type).Show()
+	b := BlockStmt(*self.Body).Show()
+	return fmt.Sprintf(temp, t, b)
+}
+
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
 	case *ast.CallExpr:
@@ -148,6 +156,8 @@ func ShowExpr(e ast.Expr) string {
 		return IndexExpr(*e.(*ast.IndexExpr)).Show()
 	case *ast.SliceExpr:
 		return SliceExpr(*e.(*ast.SliceExpr)).Show()
+	case *ast.FuncLit:
+		return FuncLit(*e.(*ast.FuncLit)).Show()
 	}	
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }

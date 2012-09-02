@@ -1,18 +1,45 @@
 -*- longlines -*-
 
 
+======================================================================
+Goto Statement.
+
+func main() {
+	 temp := 0
+	 fmt.Println(1)	 
+	 if temp == 0 {
+	 	goto skip	 
+	 }
+	 fmt.Println(2)	 
+ skip:
+	 fmt.Println(3)	 
+}
+
+var main = function() {
+    for (i=0; i<1; i++) {
+        temp := 0
+        fmt.Println(1);
+        if temp == 0 {
+           goto skip    
+        }
+        fmt.Println(2)  
+    skip:
+        fmt.Println(3)     
+    }
+}
+
 
 ======================================================================
 Switch Statements.
 
-Same behavior as go, break statments are generated.
+Same behavior as go, break statments are generated to prevent fall through.
 
 ======================================================================
 Scoping.
 
 
 Javascript has static scoping
-Go uses dyn 
+Go uses dynamic
 
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  
