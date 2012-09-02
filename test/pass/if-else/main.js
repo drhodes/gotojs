@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 var ifsquare = function(x, y) {
     if (x < 0) {
         return x * y;

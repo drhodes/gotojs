@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 const c1 = "asdf";
 const c2 = 2;
 const c3 = 234.234;

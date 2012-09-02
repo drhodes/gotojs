@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 var multiply = function(x, y) {
     return x * y;
 }

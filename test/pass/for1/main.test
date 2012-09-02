@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 var count = function(a, b) {
     for (var i = a; i < b; i++) {
         var a = i;

@@ -41,8 +41,8 @@ func (self StateMap) isin(id string) bool {
 
 type Package ast.Package
 func (self Package) Show() {
-	f := "// package %s\n"
-	fmt.Printf(f, self.Name)
+	//f := "// package %s\n"
+	//fmt.Printf(f, self.Name)
 }
 
 type ReturnStmt ast.ReturnStmt
@@ -109,6 +109,12 @@ func (self StarExpr) Show() string {
 	return ShowExpr(self.X) 
 }
 
+type IndexExpr ast.IndexExpr
+func (self IndexExpr) Show() string {
+	idx := ShowExpr(self.Index)
+	return ShowExpr(self.X) + "[" + idx + "]"
+}
+
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
 	case *ast.CallExpr:
@@ -127,6 +133,9 @@ func ShowExpr(e ast.Expr) string {
 		return ArrayType(*e.(*ast.ArrayType)).Show()
 	case *ast.StarExpr:
 		return StarExpr(*e.(*ast.StarExpr)).Show()
+	case *ast.IndexExpr:
+		return IndexExpr(*e.(*ast.IndexExpr)).Show()
+
 	}	
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
@@ -142,11 +151,15 @@ func (self ExprList) Show() string {
 
 type CallExpr ast.CallExpr
 func (self CallExpr) Show() string {
-	const ce = "%s(%s)"
-	return fmt.Sprintf(ce, 
+	const ce = "%s(%s)"	
+		result := fmt.Sprintf(ce, 
 		ShowExpr(self.Fun.(ast.Expr)),
 		ExprList(self.Args).Show(),
-	)
+		)
+	if strings.HasPrefix(result, "append") {
+		return "lib." + result
+	}
+	return result
 }
 
 type ExprStmt ast.ExprStmt
@@ -537,5 +550,6 @@ func main() {
 	// build the files in the directory.
 	log.Println(*dir)
 	pks := parse(*dir)
+	fmt.Println("var lib = require('../../lib.js');")
 	trans(pks)
 }

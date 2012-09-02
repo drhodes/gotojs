@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 var main = function() {
     var n = 1;
     switch (true) {

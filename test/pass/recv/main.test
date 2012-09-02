@@ -1,4 +1,4 @@
-// package main
+var lib = require('../../lib.js');
 
 function Point(x, y) {
     this.x = x;
