@@ -5,8 +5,8 @@ import os, sys
 TESTDIR = "./test/pass"
     
 def testpath(path):
-    # get the gojs compiler output
-    cmd = './gojs -path="%s/%s"' % (TESTDIR, path)
+    # get the gotojs compiler output
+    cmd = './gotojs -path="%s/%s"' % (TESTDIR, path)
     raw_result = os.popen(cmd).read()
     
     # write the output to the testfile.

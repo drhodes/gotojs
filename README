@@ -1,3 +1,5 @@
+backup location for 
+experimental go to javascript compiler.
 
 
 ------------------------------------------------------------------
@@ -8,6 +10,8 @@
 ------------------------------------------------------------------
 
 How to install the thing.
+
+don't, it's not even close to usable.
 
 $ ./check-deps.sh
 
