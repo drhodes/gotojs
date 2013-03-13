@@ -38,8 +38,6 @@ Same behavior as go, break statments are generated to prevent fall through.
 Scoping.
 
 
-Javascript has static scoping
-Go uses dynamic
 
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  
