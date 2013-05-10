@@ -550,6 +550,9 @@ func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 
 		switch node.(type) {
 		case *ast.FuncDecl:
+
+
+
 			f := FuncDecl(*node.(*ast.FuncDecl))
 			fmt.Println(f.Show())
 
@@ -593,6 +596,7 @@ func parse(dir string) map[string]*ast.Package {
 func trans(pks map[string]*ast.Package) {
 	ts := Trans{}
 	for _, pk := range pks {
+		ast.Walk(normalizer{}, pk)		
 		ast.Walk(ts, pk)
 	}
 	fmt.Println("main();")
