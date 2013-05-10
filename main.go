@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"go/ast"
 	"go/parser"
-	"go/token"	
+	"go/token"
 	"log"
 	"os"
 	"strings"
-	"fmt"
 )
 
 var (
@@ -18,35 +18,19 @@ var (
 type Trans struct {
 }
 
-// GLOBAL STATE -------------------------------------------------------
-type StateMap map[string]bool
-var sm = make(StateMap)
-func (self StateMap) enter(id string) {
-	self[id] = true
-}
-func (self StateMap) exit(id string) {
-	if !self[id] {
-		msg := "Trying to StateMap.exit() from %s, but %s not in StateMap"
-		log.Panic(fmt.Sprintf(msg, id, id))
-	}
-	delete(self, id)
-}
-func (self StateMap) isin(id string) bool {
-	return self[id]
-}
-// --------------------------------------------------------------------
-
 type Package ast.Package
+
 func (self Package) Show() {
 	//f := "// package %s\n"
 	//fmt.Printf(f, self.Name)
 }
 
 type ReturnStmt ast.ReturnStmt
+
 func (self ReturnStmt) Show() string {
 	s := "return "
 	exps := []string{}
-		
+
 	for _, xp := range self.Results {
 		exps = append(exps, ShowExpr(xp))
 	}
@@ -60,21 +44,25 @@ func (self ReturnStmt) Show() string {
 }
 
 type BasicLit ast.BasicLit
+
 func (self BasicLit) Show() string {
 	return self.Value
 }
 
 type BinaryExpr ast.BinaryExpr
+
 func (self BinaryExpr) Show() string {
-	return ShowExpr(self.X) + self.Op.String() + ShowExpr(self.Y) 
+	return ShowExpr(self.X) + self.Op.String() + ShowExpr(self.Y)
 }
 
 type SelectorExpr ast.SelectorExpr
+
 func (self SelectorExpr) Show() string {
-	return ShowExpr(self.X) + "." + Ident(*self.Sel).Show() 
+	return ShowExpr(self.X) + "." + Ident(*self.Sel).Show()
 }
 
 type CompositeLit ast.CompositeLit
+
 func (self CompositeLit) Show() string {
 	exps := []string{}
 	for _, el := range self.Elts {
@@ -86,13 +74,14 @@ func (self CompositeLit) Show() string {
 	if self.Type != nil {
 		switch self.Type.(type) {
 		case *ast.ArrayType:
-			return result + "["+args+"]"
-		}	
-	}	
+			return result + "[" + args + "]"
+		}
+	}
 	return "new " + ShowExpr(self.Type) + "(" + args + ")"
 }
 
 type ArrayType ast.ArrayType
+
 func (self ArrayType) Show() string {
 	log.Println(ShowExpr(self.Elt))
 	log.Println(ShowExpr(self.Len))
@@ -100,18 +89,21 @@ func (self ArrayType) Show() string {
 }
 
 type StarExpr ast.StarExpr
+
 func (self StarExpr) Show() string {
 	// FULLSTOP UNTIL exp/types is done.
-	return ShowExpr(self.X) 
+	return ShowExpr(self.X)
 }
 
 type IndexExpr ast.IndexExpr
+
 func (self IndexExpr) Show() string {
 	idx := ShowExpr(self.Index)
 	return ShowExpr(self.X) + "[" + idx + "]"
 }
 
 type SliceExpr ast.SliceExpr
+
 func (self SliceExpr) Show() string {
 	const temp = "%s.slice(%s,%s)"
 	x := ShowExpr(self.X)
@@ -127,6 +119,7 @@ func (self SliceExpr) Show() string {
 }
 
 type FuncLit ast.FuncLit
+
 func (self FuncLit) Show() string {
 	const temp = "function%s%s"
 	t := FuncType(*self.Type).Show()
@@ -134,10 +127,23 @@ func (self FuncLit) Show() string {
 	return fmt.Sprintf(temp, t, b)
 }
 
+type UnaryExpr ast.UnaryExpr
+func (self UnaryExpr) Show() string {
+	return self.Op.String() + ShowExpr(self.X)
+}
+
+type ParenExpr ast.ParenExpr
+func (self ParenExpr) Show() string {
+	const temp = "(%s)"
+	return fmt.Sprintf(temp, ShowExpr(self.X))
+}
+
+
+
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
 	case *ast.CallExpr:
-		return CallExpr(*e.(*ast.CallExpr)).Show()		
+		return CallExpr(*e.(*ast.CallExpr)).Show()
 	case *ast.Ident:
 		return Ident(*e.(*ast.Ident)).Show()
 	case *ast.BasicLit:
@@ -147,7 +153,7 @@ func ShowExpr(e ast.Expr) string {
 	case *ast.SelectorExpr:
 		return SelectorExpr(*e.(*ast.SelectorExpr)).Show()
 	case *ast.CompositeLit:
-		return CompositeLit(*e.(*ast.CompositeLit)).Show()	
+		return CompositeLit(*e.(*ast.CompositeLit)).Show()
 	case *ast.ArrayType:
 		return ArrayType(*e.(*ast.ArrayType)).Show()
 	case *ast.StarExpr:
@@ -158,11 +164,16 @@ func ShowExpr(e ast.Expr) string {
 		return SliceExpr(*e.(*ast.SliceExpr)).Show()
 	case *ast.FuncLit:
 		return FuncLit(*e.(*ast.FuncLit)).Show()
-	}	
+	case *ast.UnaryExpr:
+		return UnaryExpr(*e.(*ast.UnaryExpr)).Show()
+	case *ast.ParenExpr:
+		return ParenExpr(*e.(*ast.ParenExpr)).Show()
+	}
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
 
 type ExprList []ast.Expr
+
 func (self ExprList) Show() string {
 	exps := []string{}
 	for _, e := range self {
@@ -172,12 +183,13 @@ func (self ExprList) Show() string {
 }
 
 type CallExpr ast.CallExpr
+
 func (self CallExpr) Show() string {
-	const ce = "%s(%s)"	
-		result := fmt.Sprintf(ce, 
+	const ce = "%s(%s)"
+	result := fmt.Sprintf(ce,
 		ShowExpr(self.Fun.(ast.Expr)),
 		ExprList(self.Args).Show(),
-		)
+	)
 	if strings.HasPrefix(result, "append") {
 		return "lib." + result
 	}
@@ -185,7 +197,8 @@ func (self CallExpr) Show() string {
 }
 
 type ExprStmt ast.ExprStmt
-func (self ExprStmt) Show() string {	
+
+func (self ExprStmt) Show() string {
 	switch (self.X).(type) {
 	case *ast.CallExpr:
 		return ShowExpr(self.X)
@@ -194,50 +207,52 @@ func (self ExprStmt) Show() string {
 }
 
 type IfStmt ast.IfStmt
+
 func (self IfStmt) Show() string {
 	// The first %s is the initialization statement: http://goo.gl/ae5MV
 	// it is optional.
 	var result string
 
-    // initialization statement; or nil	
+	// initialization statement; or nil
 	// TODO rethink this, possibly needs create a to go into closure
 	// downside, maybe that would occlude scope locals.
 	// downside, slow - maybe v8 would optimize it away.
 	// might need to have have a cur_scope var up top to provide
-	// lookup ability.  The Trans visitor would be resposible for 
+	// lookup ability.  The Trans visitor would be resposible for
 	// updating that. could get ugly fast.
 	if self.Init != nil {
-		result += ShowStmt(self.Init) 
+		result += ShowStmt(self.Init)
 	}
 
 	// condition
 	result += "if (" + ShowExpr(self.Cond) + ") "
 	result += BlockStmt(*self.Body).Show()
 
-	// else branch; or nil		
+	// else branch; or nil
 	if self.Else != nil {
-		result += "else" +  ShowStmt(self.Else) 
+		result += "else" + ShowStmt(self.Else)
 	}
 	return result
 }
 
 type ForStmt ast.ForStmt
-func (self ForStmt) Show() string {	
-    // initialization statement or nil
+
+func (self ForStmt) Show() string {
+	// initialization statement or nil
 	// Init ignore this beast until IfStmt knows how to do it
 	temp := `for (%s %s %s)`
 	init := ";"
 	if self.Init != nil {
-		init = ShowStmt(self.Init) 
+		init = ShowStmt(self.Init)
 	}
-		
+
 	// condition; or nil
 	cond := ";"
 	if self.Cond != nil {
 		cond = ShowExpr(self.Cond) + ";"
 	}
 
-    // post iteration statement; or nil
+	// post iteration statement; or nil
 	post := ""
 	if self.Post != nil {
 		post = ShowStmt(self.Post)
@@ -251,16 +266,17 @@ func (self ForStmt) Show() string {
 }
 
 var __cur_symb = 0
+
 func gensym() string {
 	__cur_symb += 1
 	return fmt.Sprintf("__symb__%d", __cur_symb)
 }
 
-func SingleAssign(stmt AssignStmt) (bool, string) {	
+func SingleAssign(stmt AssignStmt) (bool, string) {
 	// safe assumption: len(self.lhs) == len(self.rhs) == 1
 	e := stmt.Lhs[0]
 	switch e.(type) {
-	case *ast.StarExpr:		
+	case *ast.StarExpr:
 		log.Panic("Pointers aren't ready yet, can't use em. Sorry.")
 	}
 
@@ -270,31 +286,32 @@ func SingleAssign(stmt AssignStmt) (bool, string) {
 	if tok == ":=" {
 		tok = "="
 	}
-	
+
 	left := ShowExpr(stmt.Lhs[0])
-	hasdot := strings.Contains(left, ".") 
+	hasdot := strings.Contains(left, ".")
 
 	right := ShowExpr(stmt.Rhs[0])
 	tok = " " + tok + " "
-	return hasdot, fmt.Sprintf("%s %s %s", left, tok, right)	
+	return hasdot, fmt.Sprintf("%s %s %s", left, tok, right)
 }
 
 type AssignStmt ast.AssignStmt
+
 func (self AssignStmt) Show() string {
 	// js doesn't have multiple assign. So
 	// val, err = expr()
-	// goes to 
+	// goes to
 	// gensym = expr()
 	// val = gensym[0]
-	// err = gensym[1]	
+	// err = gensym[1]
 	// if left hand side is . identifier
 
 	switch {
-	case len(self.Lhs) == 1 && len(self.Rhs) == 1:		
-		hasdot, result := SingleAssign(self)		
+	case len(self.Lhs) == 1 && len(self.Rhs) == 1:
+		hasdot, result := SingleAssign(self)
 		if hasdot {
 			return result
-		} else { 
+		} else {
 			return "var " + result
 		}
 	case len(self.Rhs) != 1:
@@ -305,14 +322,16 @@ func (self AssignStmt) Show() string {
 }
 
 type IncDecStmt ast.IncDecStmt
+
 func (self IncDecStmt) Show() string {
 	return ShowExpr(self.X) + self.Tok.String()
 }
 
 type RangeStmt ast.RangeStmt
+
 func (self RangeStmt) Show() string {
 	const temp = "for (var %s in %s) { \n var %s = %s[%s];"
-	
+
 	body := ShowStmt(self.Body)
 	key := self.Key
 	val := self.Value
@@ -321,11 +340,13 @@ func (self RangeStmt) Show() string {
 }
 
 type BranchStmt ast.BranchStmt
+
 func (self BranchStmt) Show() string {
-	return self.Tok.String() +";"
+	return self.Tok.String() + ";"
 }
 
 type SwitchStmt ast.SwitchStmt
+
 func (self SwitchStmt) Show() string {
 	cond := ""
 	if self.Tag != nil {
@@ -340,6 +361,7 @@ func (self SwitchStmt) Show() string {
 }
 
 type CaseClause ast.CaseClause
+
 func (self CaseClause) Show() string {
 	temp := "case %s: %s"
 	list := ExprList(self.List).Show()
@@ -349,20 +371,20 @@ func (self CaseClause) Show() string {
 
 func ShowStmt(s ast.Stmt) string {
 	switch (s).(type) {
-	case *ast.ReturnStmt: 			
+	case *ast.ReturnStmt:
 		return ReturnStmt(*(s.(*ast.ReturnStmt))).Show() + ";"
-	case *ast.ExprStmt:     
+	case *ast.ExprStmt:
 		return ExprStmt(*(s.(*ast.ExprStmt))).Show() + ";"
 	case *ast.IfStmt:
 		return IfStmt(*(s.(*ast.IfStmt))).Show()
 	case *ast.BlockStmt:
-		return BlockStmt(*s.(*ast.BlockStmt)).Show() 
+		return BlockStmt(*s.(*ast.BlockStmt)).Show()
 	case *ast.ForStmt:
 		return ForStmt(*s.(*ast.ForStmt)).Show()
 	case *ast.AssignStmt:
 		return AssignStmt(*s.(*ast.AssignStmt)).Show() + ";"
 	case *ast.IncDecStmt:
-		return IncDecStmt(*s.(*ast.IncDecStmt)).Show() + ";"	
+		return IncDecStmt(*s.(*ast.IncDecStmt)).Show() + ";"
 	case *ast.RangeStmt:
 		return RangeStmt(*s.(*ast.RangeStmt)).Show()
 	case *ast.BranchStmt:
@@ -376,6 +398,7 @@ func ShowStmt(s ast.Stmt) string {
 }
 
 type StmtList []ast.Stmt
+
 func (self StmtList) Show() string {
 	stmts := []string{}
 	for _, s := range self {
@@ -385,37 +408,39 @@ func (self StmtList) Show() string {
 }
 
 type BlockStmt ast.BlockStmt
+
 func (self BlockStmt) Show() string {
 	return fmt.Sprintf("{\n%s\n}", StmtList(self.List).Show())
 }
 
 type FuncType ast.FuncType
+
 func (self FuncType) Show() string {
 	return fmt.Sprintf("%s", FieldList(*self.Params).Show())
 }
 
 type FuncDecl ast.FuncDecl
+
 func (self FuncDecl) Show() string {
 	ident := Ident(*self.Name).Show()
-	sm.enter("FuncType")
 	ftype := FuncType(*self.Type).Show()
-	sm.exit("FuncType")
 	bstmt := BlockStmt(*self.Body).Show()
 	recv := ""
 	if self.Recv != nil {
 		if len(self.Recv.List) != 0 {
 			// Point.prototype.Add = function
-			f := "%s.%s = function %s %s" 
+			f := "%s.%s = function %s %s"
 			typ := self.Recv.List[0]
 			recv = ShowExpr(typ.Type) + ".prototype"
 			return fmt.Sprintf(f, recv, ident, ftype, bstmt)
 		}
 	}
-	f := "var %s = function %s %s %s"		
+	f := "var %s = function %s %s %s"
 	return fmt.Sprintf(f, ident, recv, ftype, bstmt)
-} 
+}
 
 type Field ast.Field
+
 func (self Field) Show() string {
 	xs := []string{}
 	for _, f := range self.Names {
@@ -425,6 +450,7 @@ func (self Field) Show() string {
 }
 
 type Fields []*ast.Field
+
 func (self Fields) Show() string {
 	xs := []string{}
 	for _, f := range self {
@@ -434,27 +460,31 @@ func (self Fields) Show() string {
 }
 
 type FieldList ast.FieldList
+
 func (self FieldList) Show() string {
 	return fmt.Sprintf("(%s)", Fields(self.List).Show())
 }
 
 type Ident ast.Ident
+
 func (self Ident) Show() string {
 	return fmt.Sprint(self.Name)
 }
 
 type StructList ast.FieldList
+
 func (self StructList) Show() string {
-	flds := []string{}	
+	flds := []string{}
 	for _, fld := range self.List {
 		for _, n := range fld.Names {
-			flds = append(flds, "this." + n.String() + "=" + n.String() + ";")
+			flds = append(flds, "this."+n.String()+"="+n.String()+";")
 		}
 	}
 	return strings.Join(flds, "\n")
 }
 
 type StructType ast.StructType
+
 func (self StructType) Show() string {
 	const class = "function %s%s{%s}"
 	args := FieldList(*self.Fields).Show()
@@ -463,6 +493,7 @@ func (self StructType) Show() string {
 }
 
 type TypeSpec ast.TypeSpec
+
 func (self TypeSpec) Show() string {
 	result := ""
 	switch self.Type.(type) {
@@ -474,10 +505,11 @@ func (self TypeSpec) Show() string {
 }
 
 type ValueSpec ast.ValueSpec
+
 func (self ValueSpec) Show(dec string) string {
 	const temp = "%s %s %s = %s"
 	result := []string{}
-	
+
 	for i := range self.Names {
 		t := ""
 		if self.Type != nil {
@@ -492,20 +524,21 @@ func (self ValueSpec) Show(dec string) string {
 }
 
 type GenDecl ast.GenDecl
+
 func (self GenDecl) Show() string {
 	result := []string{}
 	for _, spec := range self.Specs {
 		switch spec.(type) {
-		case *ast.ValueSpec: 			
+		case *ast.ValueSpec:
 			vs := ValueSpec(*spec.(*ast.ValueSpec))
 			result = append(result, vs.Show(self.Tok.String()))
 		case *ast.ImportSpec:
-			continue; //result = append(Result, "")
+			continue //result = append(Result, "")
 		case *ast.TypeSpec:
 			ts := TypeSpec(*spec.(*ast.TypeSpec))
 			result = append(result, ts.Show())
 		default:
-			return "unhandled GenDecl in func GenDecl.Show: " + fmt.Sprintf("%T", spec)			
+			return "unhandled GenDecl in func GenDecl.Show: " + fmt.Sprintf("%T", spec)
 		}
 	}
 	return strings.Join(result, "\n")
@@ -513,14 +546,14 @@ func (self GenDecl) Show() string {
 
 func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 	if node != nil {
-		//log.Printf("%T", node)			
+		//log.Printf("%T", node)
 
 		switch node.(type) {
-		case *ast.FuncDecl:		
+		case *ast.FuncDecl:
 			f := FuncDecl(*node.(*ast.FuncDecl))
-			fmt.Println(f.Show())			
+			fmt.Println(f.Show())
 
-		case *ast.Package:		
+		case *ast.Package:
 			pkg := Package(*node.(*ast.Package))
 			pkg.Show()
 
@@ -530,7 +563,7 @@ func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 
 		case *ast.GenDecl:
 			fmt.Println(GenDecl(*node.(*ast.GenDecl)).Show())
-		default: 
+		default:
 			//log.Println("Not handled")
 		}
 	}
@@ -561,7 +594,7 @@ func trans(pks map[string]*ast.Package) {
 	ts := Trans{}
 	for _, pk := range pks {
 		ast.Walk(ts, pk)
-	}	
+	}
 	fmt.Println("main();")
 }
 

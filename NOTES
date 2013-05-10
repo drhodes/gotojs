@@ -2,7 +2,26 @@
 
 
 ======================================================================
+TODO Sourcemaps
+
+======================================================================
+go methods / js methods.
+
+js uses this, go uses whatever. 
+
+on the first pass, normalize all method names.
+
+
+
+======================================================================
 Goto Statement.
+
+continuation passing style maybe?
+look to see if there is a mechanical way to do this
+
+some good ideas:
+http://stackoverflow.com/questions/9751207/how-can-i-use-goto-in-javascript
+
 
 func main() {
 	 temp := 0

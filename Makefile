@@ -1,6 +1,6 @@
 .PHONY: all test clean
 
-build: clean
+build: 
 	go build
 
 test:
