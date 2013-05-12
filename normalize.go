@@ -2,7 +2,6 @@ package main
 
 import (
 	"go/ast"
-	"log"
 )
 
 // javascript objects uses "this" for all receivers, 
@@ -12,11 +11,8 @@ import (
 
 type namechanger string
 func (m namechanger) Visit(n ast.Node) ast.Visitor {
-
 	switch n.(type) {
 	case *ast.Ident:
-		log.Println(n)
-
 		f := n.(*ast.Ident)
 		if f.Name == string(m) {
 			f.Name = "this"

@@ -133,12 +133,30 @@ func (self UnaryExpr) Show() string {
 }
 
 type ParenExpr ast.ParenExpr
-func (self ParenExpr) Show() string {
+func (self ParenExpr) Show() string {	
 	const temp = "(%s)"
 	return fmt.Sprintf(temp, ShowExpr(self.X))
 }
 
+type TypeAssertExpr ast.TypeAssertExpr
+func (self TypeAssertExpr) Show() string {
+	const temp = "%s.(%s)"
+	return fmt.Sprintf(temp, ShowExpr(self.X), ShowExpr(self.Type))
+}
 
+type KeyValueExpr ast.KeyValueExpr
+func (self KeyValueExpr) Show() string {
+	const temp = "[%s, %s]"
+	key := ShowExpr(self.Key)
+	val := ShowExpr(self.Value)
+	return fmt.Sprintf(temp, key, val)
+}
+
+type MapType ast.MapType
+func (self MapType) Show() string {
+	const temp = "MapObj"
+	return fmt.Sprint(temp)
+}
 
 func ShowExpr(e ast.Expr) string {
 	switch (e).(type) {
@@ -168,6 +186,13 @@ func ShowExpr(e ast.Expr) string {
 		return UnaryExpr(*e.(*ast.UnaryExpr)).Show()
 	case *ast.ParenExpr:
 		return ParenExpr(*e.(*ast.ParenExpr)).Show()
+	case *ast.TypeAssertExpr:
+		return TypeAssertExpr(*e.(*ast.TypeAssertExpr)).Show()
+	case *ast.KeyValueExpr:
+		return KeyValueExpr(*e.(*ast.KeyValueExpr)).Show()
+	case *ast.MapType:
+		return MapType(*e.(*ast.MapType)).Show()
+
 	}
 	return "unhandled Expr in func ShowExpr: " + fmt.Sprintf("%T", e)
 }
@@ -199,11 +224,12 @@ func (self CallExpr) Show() string {
 type ExprStmt ast.ExprStmt
 
 func (self ExprStmt) Show() string {
-	switch (self.X).(type) {
-	case *ast.CallExpr:
-		return ShowExpr(self.X)
-	}
-	return "ExprStmt.Show fails to handle: " + fmt.Sprintf("%T", self.X)
+	return ShowExpr(self.X)
+	// switch (self.X).(type) {
+	// case *ast.CallExpr:
+	// 	return ShowExpr(self.X)
+	// }
+	// return "ExprStmt.Show fails to handle: " + fmt.Sprintf("%T", self.X)
 }
 
 type IfStmt ast.IfStmt
@@ -369,6 +395,27 @@ func (self CaseClause) Show() string {
 	return fmt.Sprintf(temp, list, body) + "break;"
 }
 
+type DeclStmt ast.DeclStmt
+func (self DeclStmt) Show() string {
+	return "DeclStmt not implemented"
+} 
+
+type DeferStmt ast.DeferStmt
+func (self DeferStmt) Show() string {
+	// this is going to take some effort.
+	
+	
+	return "//defer " + ShowExpr(self.Call)
+}
+
+type TypeSwitchStmt ast.TypeSwitchStmt
+func (self TypeSwitchStmt) Show() string {
+	temp := "(typeswitch body:%s init:%s assign:%s)"
+	return fmt.Sprintf(temp, ShowStmt(self.Body), 
+		ShowStmt(self.Init), ShowStmt(self.Assign))
+
+}
+
 func ShowStmt(s ast.Stmt) string {
 	switch (s).(type) {
 	case *ast.ReturnStmt:
@@ -393,6 +440,13 @@ func ShowStmt(s ast.Stmt) string {
 		return SwitchStmt(*s.(*ast.SwitchStmt)).Show()
 	case *ast.CaseClause:
 		return CaseClause(*s.(*ast.CaseClause)).Show()
+	case *ast.DeclStmt:
+		return DeclStmt(*s.(*ast.DeclStmt)).Show()
+	case *ast.DeferStmt:
+		return DeferStmt(*s.(*ast.DeferStmt)).Show()	
+	case *ast.TypeSwitchStmt:
+		return TypeSwitchStmt(*s.(*ast.TypeSwitchStmt)).Show()
+
 	}
 	return "unhandled Stmt in func ShowStmt: " + fmt.Sprintf("%T", s)
 }
@@ -444,7 +498,11 @@ type Field ast.Field
 func (self Field) Show() string {
 	xs := []string{}
 	for _, f := range self.Names {
-		xs = append(xs, Ident(*f).Show())
+
+		id := Ident(*f).Show()
+		if id != "" {
+			xs = append(xs, Ident(*f).Show())
+		}
 	}
 	return strings.Join(xs, ", ")
 }
@@ -454,7 +512,10 @@ type Fields []*ast.Field
 func (self Fields) Show() string {
 	xs := []string{}
 	for _, f := range self {
-		xs = append(xs, Field(*f).Show())
+		x := Field(*f).Show()
+		if x != "" {
+			xs = append(xs, x)
+		}
 	}
 	return strings.Join(xs, ", ")
 }
@@ -546,13 +607,8 @@ func (self GenDecl) Show() string {
 
 func (self Trans) Visit(node ast.Node) (w ast.Visitor) {
 	if node != nil {
-		//log.Printf("%T", node)
-
 		switch node.(type) {
 		case *ast.FuncDecl:
-
-
-
 			f := FuncDecl(*node.(*ast.FuncDecl))
 			fmt.Println(f.Show())
 

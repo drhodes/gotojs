@@ -49,5 +49,5 @@ def check_gotojs():
 if __name__ == "__main__":
     check_gotojs()
     for d in os.listdir(TESTDIR):
-        if d == "acid":
+        if d != "acid":
             testpath(d)

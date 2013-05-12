@@ -5,15 +5,6 @@
 TODO Sourcemaps
 
 ======================================================================
-go methods / js methods.
-
-js uses this, go uses whatever. 
-
-on the first pass, normalize all method names.
-
-
-
-======================================================================
 Goto Statement.
 
 continuation passing style maybe?

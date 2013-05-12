@@ -51,7 +51,7 @@ func main() {
 		} else {
 			switch {
 			case true:
-				_ = map[string]string{"key": "val"}
+				_ = map[string]string{"key": "val", "a": "b"}
 			default:
 				p := &point{}
 				p.X()
