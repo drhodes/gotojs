@@ -77,6 +77,9 @@ Same behavior as go, break statments are generated to prevent fall through.
 Scoping.
 
 
+
+
+
 ----------------------------------------------------------------------   
 What about goroutines? They look possible, at least in a single thread which is good enough for now.  
 

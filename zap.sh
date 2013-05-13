@@ -24,3 +24,5 @@ do
 	cd ./test/run/$pkg && make clean && cd - > /dev/null
 done;
 
+rm -f ./bin/gotojs
+
