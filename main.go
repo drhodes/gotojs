@@ -337,8 +337,10 @@ func (self AssignStmt) Show() string {
 		hasdot, result := SingleAssign(self)
 		if hasdot {
 			return result
-		} else {
+		} else if self.Tok.String() == ":=" {
 			return "var " + result
+		} else {
+			return result
 		}
 	case len(self.Rhs) != 1:
 		// return MultiAssign(self)

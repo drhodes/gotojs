@@ -9,7 +9,7 @@ var main = function() {
             square(4)
         })
         var temp = square(4);
-        var temp = square(temp);
+        temp = square(temp);
     }();
 
     while (__defer_stack.length != 0) {
