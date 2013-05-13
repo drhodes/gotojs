@@ -19,10 +19,10 @@ func (self deferLocator) Visit(n ast.Node) ast.Visitor {
 func generateDeferClosure(f FuncDecl, missingBody string) string {
 	const bodyWrapper = `{
 	var __defer_stack = [];
-	var __retvals = function() %s;
+	var __retvals = function() %s();
 
 	while (__defer_stack.length != 0) {
-	 	__defer_stackstack.pop()();
+	 	__defer_stack.pop()();
     }
 	return __retvals;
     }

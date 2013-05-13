@@ -16,3 +16,11 @@ do
 	go clean ./test/pass/$pkg
 	rm -f ./test/pass/$pkg/main.test
 done;
+
+
+for pkg in $(ls ./test/run) 
+do
+	echo cleaning ./test/run/$pkg
+	cd ./test/run/$pkg && make clean && cd - > /dev/null
+done;
+

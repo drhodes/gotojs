@@ -10,10 +10,10 @@ var main = function() {
         })
         var temp = square(4);
         var temp = square(temp);
-    };
+    }();
 
     while (__defer_stack.length != 0) {
-        __defer_stackstack.pop()();
+        __defer_stack.pop()();
     }
     return __retvals;
 }

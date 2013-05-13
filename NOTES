@@ -1,6 +1,5 @@
 -*- longlines -*-
 
-
 ======================================================================
 The `defer` statement.
 
@@ -16,16 +15,14 @@ func f() {
 	 // if this function contains a defer statement
 	 // then allocation a defer stack
 	 __defer_stack = []	
-
-	 var retvals = function() { 
-         __defer_stack.push(function(){foo()})
+	 var retvals = function() { 	 	 
+         __defer_stack.push(function(){foo()}) // defer foo()
          
          if randombool {
-         	__defer_stack.push(function(){bar()})
+         	__defer_stack.push(function(){bar()}) // defer bar()
          	do_something()
          }
      }()
-
 	 while (__defer_stack.size() != 0) {
 	 	   __defer_stackstack.pop()();
      }
