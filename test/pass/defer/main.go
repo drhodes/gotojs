@@ -6,4 +6,12 @@ func square(x int) int {
 
 func main() {	
 	defer square(4)	
+	temp := square(4)
+	temp = square(temp)
 }
+
+
+
+
+
+

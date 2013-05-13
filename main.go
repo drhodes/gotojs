@@ -402,10 +402,8 @@ func (self DeclStmt) Show() string {
 
 type DeferStmt ast.DeferStmt
 func (self DeferStmt) Show() string {
-	// this is going to take some effort.
-	
-	
-	return "//defer " + ShowExpr(self.Call)
+	const temp = "__defer_stack.push(function(){%s})"
+	return fmt.Sprintf(temp, ShowExpr(self.Call))
 }
 
 type TypeSwitchStmt ast.TypeSwitchStmt
@@ -413,7 +411,6 @@ func (self TypeSwitchStmt) Show() string {
 	temp := "(typeswitch body:%s init:%s assign:%s)"
 	return fmt.Sprintf(temp, ShowStmt(self.Body), 
 		ShowStmt(self.Init), ShowStmt(self.Assign))
-
 }
 
 func ShowStmt(s ast.Stmt) string {
@@ -478,19 +475,22 @@ type FuncDecl ast.FuncDecl
 func (self FuncDecl) Show() string {
 	ident := Ident(*self.Name).Show()
 	ftype := FuncType(*self.Type).Show()
-	bstmt := BlockStmt(*self.Body).Show()
+	//bstmt := BlockStmt(*self.Body).Show()
 	recv := ""
+
 	if self.Recv != nil {
 		if len(self.Recv.List) != 0 {
 			// Point.prototype.Add = function
-			f := "%s.%s = function %s %s"
+			f := "%s.%s = function %s %s "
 			typ := self.Recv.List[0]
 			recv = ShowExpr(typ.Type) + ".prototype"
-			return fmt.Sprintf(f, recv, ident, ftype, bstmt)
+			result := fmt.Sprintf(f, recv, ident, ftype, "%s")//bstmt)
+			return generateDeferClosure(self, result)
 		}
 	}
 	f := "var %s = function %s %s %s"
-	return fmt.Sprintf(f, ident, recv, ftype, bstmt)
+	result := fmt.Sprintf(f, ident, recv, ftype, "%s")//bstmt)
+	return generateDeferClosure(self, result)
 }
 
 type Field ast.Field
